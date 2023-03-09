@@ -1,0 +1,28 @@
+{
+    "short_name": "SXSW Game",
+    "name": "Roboflow SXSW Scavenger Hunt",
+    "icons": [
+        {
+        "src": "/512.png",
+        "type": "image/png",
+        "sizes": "512x512 120x120 152x152 167x167 180x180 192x192 384x384",
+        "purpose": "any maskable"
+        }
+    ],
+    "id": "/?source=pwa",
+    "start_url": "/?source=pwa",
+    "background_color": "#fff",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#7733f4",
+    "shortcuts": [
+        {
+        "name": "Record an Object",
+        "short_name": "Play",
+        "description": "Record an object for the scavenger hunt",
+        "url": "/play?source=pwa",
+        "icons": [{ "src": "/images/512.png", "sizes": "512x512" }]
+        }
+    ],
+    "description": "Identify objects in the wild with Roboflow. Earn a chance to win $1,000."
+}

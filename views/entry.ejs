@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <%- include('meta.ejs') %>
+        <script>
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+        registration.unregister();
+    } 
+});
+        </script>
+    </head>
+    <body>
+        <section id="desktop_message">
+            <p>
+                This scavenger hunt is best experienced on a mobile device.
+            </p>
+            <p>
+                Scan the QR code below to open this page on your phone.
+            </p>
+            <img src="/qr.png" />
+        </section>
+        <%- include('navigation.ejs') %>
+        <div id="main">
+            <main id="opening_page">
+                <% if (error) { %>
+                    <div class="error">
+                        <p><%= error %>. Please try again.</p>
+                    </div>
+                <% } %>
+                <section id="opening">
+                    <h1>The $1000 Roboflow SXSW Scavenger Hunt 🗺️</h1>
+                    <p>
+                        Welcome to the Roboflow SXSW Scavenger Hunt.
+                    </p>
+                    <p>
+                        Your mission, should you choose to accept, is to find all objects on the scavenger list.
+                    </p>
+                    <p>
+                        You can use your browser webcam to scan a room for objects. For each five objects you find, you'll receive an entry into the $1,000 contest. There are 25 objects to find.
+                    </p>
+                    <p>
+                        Good luck!
+                    </p>
+                    <button onclick="toggleRegister()">Start</button>
+                    <button onclick="toggleLogin()" class="full_size_button_aqua">Log In</button>
+                </section>
+                <section id="register">
+                    <h2>Create an account 👋</h2>
+                    <p>
+                        Enter your email and a password to create an account.
+                    </p>
+                    <form id="register_form" action="/register" method="POST">
+                        <label for="email_create">Email</label>
+                        <input type="email" name="email_create" id="email_create" placeholder="example@example.com" />
+                        <label for="create_pw">Password</label>
+                        <input type="password" name="create_pw" id="create_pw" />
+                        <input type="submit" value="Register" />
+                        <p>
+                            Already have an account? <button onclick="toggleLogin()" class="full_size_button_aqua">Log In</button>
+                        </p>
+                        <p style="font-size: 12px;">By registering, you agree to the <a href="/terms" class="leaderboard_link">Terms of Service</a> and <a href="/rules" class="leaderboard_link"> Competition Rules</a>.</p>
+                    </form>
+                </section>
+                <section id="login">
+                    <h2>Log In 🔒</h2>
+                    <p>
+                        Enter your email and password to log in.
+                    </p>
+                    <form id="login_form" action="/login" method="POST">
+                        <label for="email">Email</label>
+                        <input type="email" name="email" id="email" />
+                        <label for="pw">Password</label>
+                        <input type="password" name="pw" id="pw" />
+                        <input type="submit" value="Log In" />
+                        <p>
+                            Don't have an account? <button onclick="toggleRegister()" class="full_size_button_aqua">Register</button>
+                        </p>
+                    </form>
+                </section>
+                <script>
+                    var register = document.getElementById("register");
+                    var login = document.getElementById("login");
+                    var opening = document.getElementById("opening");
+
+                    function toggleRegister(element) {
+                        register.style.display = "block";
+                        login.style.display = "none";
+                        opening.style.display = "none";
+                    }
+
+                    function toggleLogin(element) {
+                        register.style.display = "none";
+                        login.style.display = "block";
+                        opening.style.display = "none";
+                    }
+                </script>
+                <%- include('footer.ejs') %>
+            </main>
+        </div>
+    </body>
+</html>

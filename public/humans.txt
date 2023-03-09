@@ -1,0 +1,7 @@
+This application was made with love by the Roboflow team.
+
+---------------------------------------------------------
+
+Does computer vision excite you as much as it does for our team? We’re hiring! Check out our open roles.
+
+https://roboflow.com/careers

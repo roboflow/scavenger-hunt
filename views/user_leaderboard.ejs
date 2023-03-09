@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <%- include('meta.ejs') %>
+        <style>
+            h1 {
+                font-size: 22px;
+            }
+        </style>
+    </head>
+    <body>
+        <%- include('navigation.ejs') %>
+        <div id="main">
+            <main>
+                <h1>The $1000 SXSW Scavenger Hunt Leaderboard 🏆</h1>
+                <% if (leaderboard.length > 0) { %>
+                    <a href="/" class="full_size_button_aqua">Play</a>
+                    <ul class="leaderboard">
+                        <% for (let i = 0; i < leaderboard.length; i++) { %>
+                            <li
+                                <% if (leaderboard[i]["email"] == email) { %>
+                                    class="user_in_leaderboard"
+                                <% } %>
+                                >
+                                <div class="rank"><%= i + 1 %></div>
+                                <div class="user">
+                                    <% if (!leaderboard[i]["username"]) { %>
+                                        No Name
+                                    <% } else { %>
+                                        <%= leaderboard[i]["username"] %>
+                                    <% } %>
+                                    </div>
+                                <div class="objects"><% if (leaderboard[i]["objects_identified"] == 0) { %>0 Objects<% } else { %><%= leaderboard[i]["objects_identified"] %> Objects<% } %></div>
+                            </li>
+                        <% } %>
+                        <% if (leaderboard.length < 10 && !user_in_leaderboard) { %>
+                            <li>
+                                <div class="rank"></div>
+                                <div class="user"><%= username %></div>
+                                <div class="objects"><%= objects_identified %> Objects</div>
+                            </li>
+                        <% } %>
+                    </ul>
+                    <hr>
+                    <h2>About</h2>
+                    <p>Find 5 random objects with your phone's camera. For every 5 you find, you get one more entry in the $1000 contest. <a href="/">Play now.</a></p>
+                    <p>The leaderboard counts how many objects each player has found. Being higher on the leaderboard does not increase your chances of winning the contest, although identifying more objects earns you more contest entries.</p>
+                    <hr>
+                    <div class="share">
+                        <h2>Share your progress</h2>
+                        <p>Share your progress with your friends on social media!</p>
+                        <a href="https://twitter.com/share?ref_src=twsrc%5Etfw&text=I'm on the leaderboard for the SXSW Scavenger Hunt!&url=https://sxsw.roboflow.com/leaderboard&hashtags=sxsw,roboflow" class="twitter-share-button" data-show-count="false">Tweet</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                    </div>
+                <% } else { %>
+                    <p>No one has completed the challenge yet. Maybe you will be the first!</p>
+                <% } %>
+                <%- include('footer.ejs') %>
+            </main>
+        </div>
+    </body>
+</html>

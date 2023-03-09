@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <%- include('meta.ejs') %>
+    </head>
+    <body>
+        <%- include('navigation.ejs') %>
+        <div id="main">
+            <main id="opening_page">
+                <section id="opening">
+                    <h1>Roboflow Scavenger Hunt Rules</h1>
+                    <ul id="rules">
+                        <li><p>All found objects must be in the physical world. Submissions with items on digital screens are disqualified from the contest. (Sorry, Metaverse.)</p></li>
+                        <li><p>You may play and submit multiple entries. Each submission earns you an additional entry in the contest.</p></li>
+                        <li><p>You must provide a valid email to win.</p></li>
+                        <li><p>This is a game of skill! Use your judgement for where you may find your list of Scavenger Hunt items.</p></li>
+                        <li><p>For additional terms, visit our <a href="/rules">Terms of Service</a>.</p></li>
+                    </ul>
+                    <a href="/"><button>Back to Scavenger Hunt</button></a>
+                </section>
+                <%- include('footer.ejs') %>
+            </main>
+        </div>
+    </body>
+</html>

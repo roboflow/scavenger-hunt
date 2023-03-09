@@ -1,0 +1,31 @@
+{
+    "tier1": [
+        "car",
+        "backpack",
+        "bowl",
+        "bottle",
+        "cup",
+        "banana",
+        "cat",
+        "laptop"
+    ],
+    "tier2": [
+        "dog",
+        "spoon",
+        "bicycle",
+        "stop sign",
+        "orange",
+        "fork",
+        "tie",
+        "truck"
+    ],
+    "tier3": [
+        "toothbrush",
+        "skateboard",
+        "vase",
+        "wine glass",
+        "bus",
+        "scissors",
+        "tennis racket"
+    ]
+}

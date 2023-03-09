@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <%- include('meta.ejs') %>
+        <script>
+            <% if (user) { %>
+                var user_list = [
+                    <% for (let i = 0; i < scavenger_list.length; i++) { %>
+                        "<%= scavenger_list[i]['item_name'] %>",
+                    <% } %>
+                ];
+                var to_find = [
+                    <% for (let i = 0; i < scavenger_list.length; i++) { %>
+                        <% if (!scavenger_list[i]["found"]) { %>
+                            "<%= scavenger_list[i]['item_name'] %>",
+                        <% } %>
+                    <% } %>
+                ];
+            <% } %>
+        </script>
+        <script src="https://cdn.roboflow.com/0.2.26/roboflow.js"></script>
+    </head>
+    <body>
+        <section id="desktop_message">
+            <p>
+                This scavenger hunt is best experienced on a mobile device.
+            </p>
+            <p>
+                Scan the QR code below to open this page on your phone.
+            </p>
+            <img src="/qr.png" />
+            <p><a onclick="hideMobileMessage()" href="#" class="leaderboard_link">Hide Message</a></p>
+        </section>
+        <%- include('navigation.ejs') %>
+        <div id="main">
+            <section id="scanning">
+                <canvas width="640" height="480" id="video_canvas"></canvas>
+            </section>
+            <main>
+                <% if (error) { %>
+                    <div class="error">
+                        <p><%= error %>. Please try again.</p>
+                    </div>
+                <% } %>
+                <section id="toast">
+                </section>
+                <% if (new_user && scavenger_list.length == 0) { %>
+                    <h1 style="text-align: center;">Welcome to the Scavenger Hunt!</h1>
+                    <p><a href="/play" class="full_size_button_aqua">Start Playing 🎮</a></p>
+                <% } else if (scavenger_list.length == 0) { %>
+                    <section>
+                        <p id='celebrate'>🎉 Nice work! You found every object on the list.</p>
+                        <h2>Stats 📈</h2>
+                        <p>Objects found: <%= objects_identified %></p>
+                        <p>Contest entries earned: <%= raffle_tickets_won %></p>
+                    </section>
+                <% } else { %>
+                    <script>
+                        var end_time = new Date("March 20, 2023 23:59:59").getTime();
+                        var username = "<% if (username) { %><%= username %><% } %>";
+                        var timer = setInterval(function() {
+                            var now = new Date();
+                            var diff = end_time - now;
+                            var days = Math.floor(diff / 1000 / 60 / 60 / 24);
+                            var hours = Math.floor(diff / 1000 / 60 / 60) - days * 24;
+                            var minutes = Math.floor(diff / 1000 / 60) - days * 24 * 60 - hours * 60;
+                            document.getElementById("start_time").innerHTML = "Time left: " + days + "d " + hours + "h " + minutes + "m ";
+                        }, 1000);
+                    </script>
+                    <button id="webcam-predict">Play</button>
+                    <p id="disclaimer">It may take a few moments for the model to load after you click "Play".</p>
+                    <section id="completion_buttons">
+                        <p id='celebrate'>🎉 Nice work! You found everything on your list and earned yourself +1 spot in the $1,000 contest.</p>
+                        <div id="set_username">
+                            <p id="set_username_error" class="error"></p>
+                            <p>Add your username to the leaderboard!</p>
+                            <form method="POST" action="/username">
+                                <input type="text" id="uname" name="uname" placeholder="Username" />
+                                <input type="submit" value="Set Username" />
+                            </form>
+                        </div>
+                        <button onclick="window.location.reload();" class="full_size_button">Play Again</button>
+                        <a href="/leaderboard" class="full_size_button_aqua">See Leaderboard</a>
+                    </section>
+                    <h2>Your Scavenger List</h2>
+                    <ul id="scavenger_list">
+                        <% for (let i = 0; i < scavenger_list.length; i++) { %>
+                            <li id="scavenger_<%= scavenger_list[i]['item_name'] %>">
+                                <% if (scavenger_list[i]["found"]) { %>
+                                    <span class="found">✅</span>
+                                <% } else { %>
+                                    🔲
+                                <% } %>
+                                <%= scavenger_list[i]["item_name"] %>
+                            </li>
+                        <% } %>
+                    </ul>
+                    <button id="pause-camera">Pause Camera</button>
+                    <p>
+                        Use your browser webcam to scan a room for objects. When you find an object on your list, your scavenger list will update. Every five objects found earns you a new contest entry.
+                    </p>
+                    <h2>Stats 📈</h2>
+                    <p>Objects found: <span id="objects_identified_count"><%= objects_identified %></span></p>
+                    <p>Contest entries earned: <%= raffle_tickets_won %></p>
+                    <p>
+                        <% if (level == 1) { %>
+                            Playing Level 1: Easy Mode
+                        <% } else if (level == 2) { %>
+                            Playing Level 2: Medium Mode
+                        <% } else if (level == 3) { %>
+                            Playing Level 3: Hard Mode
+                        <% } %>
+                    </p>
+                    <p id="start_time"></p>
+                    <p>
+                        Logged in: <a href="#" class="leaderboard_link"><%= user %></a>
+                    </p>
+                    <p><a href="/leaderboard" class="full_size_button_aqua">View leaderboard 🏆</a></p>
+                    <script src="/script.js" async></script>
+                <% } %>
+                <%- include('footer.ejs') %>
+            </main>
+        </div>
+    </body>
+</html>
