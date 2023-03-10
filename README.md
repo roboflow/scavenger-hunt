@@ -52,7 +52,9 @@ In this scavenger hunt, event participants are tasked with identifying five obje
 
 This repository contains the source code for the application.
 
-![Screenshot](screenshot.png)
+You can use your own model hosted on Roboflow with this application.
+
+![Screenshot](screenshot.jpg)
 
 ## Technologies Used
 
@@ -94,6 +96,35 @@ Finally, run the application using Node:
 ```
 node app.js
 ```
+
+## Use Your Own Model
+
+To use your own model, you will need:
+
+1. Your Roboflow API key.
+2. Your model ID.
+3. Your model version number.
+4. A list of the classes in your project.
+
+Follow our [API key guide to find your API key](https://docs.roboflow.com/rest-api#obtaining-your-api-key) in the Roboflow dashboard.
+
+To retrieve your model ID and version number, go to the Versions page associated with your project in the Roboflow dashboard. Copy the string below "Training Results", highlighted here:
+
+![The Roboflow Versions page with the version name highlighted](training_results.png)
+
+Your model version number is the number next to the model ID.
+
+To retrieve a list of classes in your project, go to the Health Check tab and copy all of the label names in the Class Balance section.
+
+Next, open up `public/script.js` and replace the values of these variables:
+
+1. `current_model_name` with your model ID.
+2. `current_model_version` with your model version number.
+3. `API_KEY` with your Roboflow API key.
+
+Open the `classes.json` file and replace the class names with the names of classes in your dataset. The names in this file _must_ be an exact match to the class names returned by the model.
+
+The `classes.json` file has three tiers: 1, 2, and 3. This mechanic allows you to implement levels of difficulty. The easiest classes to identify should go in Tier 1; the hardest classes to identify should go in Tier 3. In the game, classes will be assigned in order of tiers. When Tier 1 is exhausted, Tier 2 classes are assigned, and so on.
 
 ## License
 
