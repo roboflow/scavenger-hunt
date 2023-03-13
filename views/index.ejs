@@ -19,6 +19,27 @@
             <% } %>
         </script>
         <script src="https://cdn.roboflow.com/0.2.26/roboflow.js"></script>
+        <script async>
+            var current_model_name = "microsoft-coco";
+            const API_KEY = "rf_U7AD2Mxh39N7jQ3B6cP8xAyufLH3";
+            const CONFIDENCE_THRESHOLD = 0.7;
+            var current_model_version = 9;
+
+            var model = roboflow
+              .auth({
+                publishable_key: API_KEY,
+              })
+              .load({
+                model: current_model_name,
+                version: current_model_version,
+              })
+              .then(function (m) {
+                model = m;
+                // images must have confidence > 0.7 to be returned by the model
+                m.configure({ threshold: CONFIDENCE_THRESHOLD });
+                detectFrame();
+              });
+        </script>
     </head>
     <body>
         <section id="desktop_message">
@@ -36,6 +57,11 @@
             <section id="scanning">
                 <canvas width="640" height="480" id="video_canvas"></canvas>
             </section>
+            <img
+                src="https://uploads-ssl.webflow.com/5f6bc60e665f54545a1e52a5/63d40cd2210b56e0e33593c7_loading-camera2.gif"
+                id="loading_picture"
+                style="display: none; width: 100%; height: auto;"
+            />
             <main>
                 <% if (error) { %>
                     <div class="error">

@@ -64,9 +64,6 @@ var color_choices = [
   "#CCCCCC",
 ];
 
-var current_model_name = "microsoft-coco";
-const API_KEY = "rf_U7AD2Mxh39N7jQ3B6cP8xAyufLH3";
-const CONFIDENCE_THRESHOLD = 0.7;
 const CAMERA_ACCESS_URL =
   "https://uploads-ssl.webflow.com/5f6bc60e665f54545a1e52a5/63d40cd1de273045d359cf9a_camera-access2.png";
 const LOADING_URL =
@@ -293,7 +290,7 @@ function drawBoundingBoxes(
   }
 }
 
-function drawBbox(canvas, ctx, video) {
+function drawBbox(ctx, video) {
   ctx.beginPath();
   var [sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight, scalingRatio] =
     getCoordinates(video);
@@ -350,7 +347,6 @@ function detectFrame() {
     if (!model) return requestAnimationFrame(detectFrame);
     // clear canvas
     if (!canvas_painted) {
-        console.log("painting canvas 1");
         var video_start = document.getElementById("video1");
         canvas.style.width = video_start.width + "px";
         canvas.style.height = video_start.height + "px";
@@ -370,7 +366,7 @@ function detectFrame() {
     model.detect(video).then(function (predictions) {
         requestAnimationFrame(detectFrame);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBbox(canvas, ctx, video);
+            drawBbox(ctx, video);
             no_detection_count = processFrame(predictions, canvas, ctx, model, no_detection_count);
         });
     } else {
@@ -379,11 +375,10 @@ function detectFrame() {
 }
 
 function webcamInference() {
-  setImageState(LOADING_URL, "video_canvas");
+  // show loading_picture
+  var loading_picture = document.getElementById("loading_picture");
+  loading_picture.style.display = "block";
   webcamLoop = true;
-  var disclaimer = document.getElementById("disclaimer");
-  disclaimer.style.display = "none";
-  document.getElementById("video_canvas").style.display = "block";
 
   if (
     document.getElementById("video1") &&
@@ -427,32 +422,12 @@ function webcamInference() {
             canvas.style.height = height + "px";
             canvas.width = width;
             canvas.height = height;
+            var disclaimer = document.getElementById("disclaimer");
+            disclaimer.style.display = "none";
+            document.getElementById("video_canvas").style.display = "block";
+            loading_picture.style.display = "none";
             
-            roboflow
-              .auth({
-                publishable_key: API_KEY,
-              })
-              .load({
-                model: current_model_name,
-                version: current_model_version,
-              })
-              .then(function (m) {
-                model = m;
-                // images must have confidence > 0.7 to be returned by the model
-                m.configure({ threshold: CONFIDENCE_THRESHOLD });
-                var result = detectFrame();
-
-                if (result) {
-                    m.teardown();
-                    // disable webcam
-                    stream.getTracks().forEach(function (track) {
-                        track.stop();
-                        });
-                }
-              })
-              .catch(function (err) {
-                setImageState(CAMERA_ACCESS_URL, "video_canvas");
-              });
+            detectFrame();
         };
 
         ctx.scale(1, 1);
