@@ -23,75 +23,83 @@
         <%- include('navigation.ejs') %>
         <div id="main">
             <main id="opening_page">
-                <% if (error) { %>
-                    <div class="error">
-                        <p><%= error %>. Please try again.</p>
-                    </div>
+                <% if (complete) { %>
+                    <section>
+                        <h1>Thanks for playing!</h1>
+                        <p>
+                            The contest is now closed. We'll be in touch if you win.
+                        </p>
+                    </section>
+                <% } else { %>
+                    <% if (error) { %>
+                        <div class="error">
+                            <p><%= error %>. Please try again.</p>
+                        </div>
+                    <% } %>
+                    <section id="opening">
+                        <h1>Roboflow Scavenger Hunt 🗺️</h1>
+                        <p>
+                            Welcome to the Roboflow Scavenger Hunt.
+                        </p>
+                        <p>
+                            Using your phone, explore to find the 25 objects on the scavenger hunt.
+                        </p>
+                        <p>
+                            We first ran this scavenger hunt at <a href="https://blog.roboflow.com/sxsw-scavenger-hunt-review/" class="leaderboard_link">SXSW 2023</a> as part of a competition. The competition has finished, but you can still play the game.
+                        </p>
+                        <button onclick="toggleRegister()">Play Game 🎮</button>
+                        <button onclick="toggleLogin()" class="full_size_button_aqua">Log In</button>
+                    </section>
+                    <section id="register">
+                        <h2>Create an account 👋</h2>
+                        <p>
+                            Enter your email and a password to create an account.
+                        </p>
+                        <form id="register_form" action="/register" method="POST">
+                            <label for="email_create">Email</label>
+                            <input type="email" name="email_create" id="email_create" placeholder="example@example.com" />
+                            <label for="create_pw">Password</label>
+                            <input type="password" name="create_pw" id="create_pw" />
+                            <input type="submit" value="Register" />
+                            <p>
+                                Already have an account? <button onclick="toggleLogin()" class="full_size_button_aqua">Log In</button>
+                            </p>
+                        </form>
+                    </section>
+                    <section id="login">
+                        <h2>Log In 🔒</h2>
+                        <p>
+                            Enter your email and password to log in.
+                        </p>
+                        <form id="login_form" action="/login" method="POST">
+                            <label for="email">Email</label>
+                            <input type="email" name="email" id="email" />
+                            <label for="pw">Password</label>
+                            <input type="password" name="pw" id="pw" />
+                            <input type="submit" value="Log In" />
+                            <p>
+                                Don't have an account? <button onclick="toggleRegister()" class="full_size_button_aqua">Register</button>
+                            </p>
+                        </form>
+                    </section>
+                    <script>
+                        var register = document.getElementById("register");
+                        var login = document.getElementById("login");
+                        var opening = document.getElementById("opening");
+
+                        function toggleRegister(element) {
+                            register.style.display = "block";
+                            login.style.display = "none";
+                            opening.style.display = "none";
+                        }
+
+                        function toggleLogin(element) {
+                            register.style.display = "none";
+                            login.style.display = "block";
+                            opening.style.display = "none";
+                        }
+                    </script>
                 <% } %>
-                <section id="opening">
-                    <h1>The $1000 SXSW Scavenger Hunt 🗺️</h1>
-                    <p>
-                        Welcome to the Roboflow SXSW Scavenger Hunt.
-                    </p>
-                    <p>
-                        Use your camera to take photos of 5 objects to enter. The more objects you find, the more chances you earn to win $1000.
-                    </p>
-                    <p>
-                        Good luck!
-                    </p>
-                    <button onclick="toggleRegister()">Play the Game</button>
-                    <button onclick="toggleLogin()" class="full_size_button_aqua">Log In</button>
-                </section>
-                <section id="register">
-                    <h2>Create an account 👋</h2>
-                    <p>
-                        Enter your email and a password to create an account.
-                    </p>
-                    <form id="register_form" action="/register" method="POST">
-                        <label for="email_create">Email</label>
-                        <input type="email" name="email_create" id="email_create" placeholder="example@example.com" />
-                        <label for="create_pw">Password</label>
-                        <input type="password" name="create_pw" id="create_pw" />
-                        <input type="submit" value="Register" />
-                        <p>
-                            Already have an account? <button onclick="toggleLogin()" class="full_size_button_aqua">Log In</button>
-                        </p>
-                        <p style="font-size: 12px;">By registering, you agree to the <a href="/terms" class="leaderboard_link">Terms of Service</a> and <a href="/rules" class="leaderboard_link"> Competition Rules</a>.</p>
-                    </form>
-                </section>
-                <section id="login">
-                    <h2>Log In 🔒</h2>
-                    <p>
-                        Enter your email and password to log in.
-                    </p>
-                    <form id="login_form" action="/login" method="POST">
-                        <label for="email">Email</label>
-                        <input type="email" name="email" id="email" />
-                        <label for="pw">Password</label>
-                        <input type="password" name="pw" id="pw" />
-                        <input type="submit" value="Log In" />
-                        <p>
-                            Don't have an account? <button onclick="toggleRegister()" class="full_size_button_aqua">Register</button>
-                        </p>
-                    </form>
-                </section>
-                <script>
-                    var register = document.getElementById("register");
-                    var login = document.getElementById("login");
-                    var opening = document.getElementById("opening");
-
-                    function toggleRegister(element) {
-                        register.style.display = "block";
-                        login.style.display = "none";
-                        opening.style.display = "none";
-                    }
-
-                    function toggleLogin(element) {
-                        register.style.display = "none";
-                        login.style.display = "block";
-                        opening.style.display = "none";
-                    }
-                </script>
                 <%- include('footer.ejs') %>
             </main>
         </div>

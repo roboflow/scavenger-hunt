@@ -5,6 +5,7 @@ var supabase = require("@supabase/supabase-js");
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 var base64buffer = require("base64-arraybuffer");
+var structuredClone = require("structured-clone");
 
 const https = require("https");
 
@@ -22,6 +23,8 @@ if (!supabaseKey || !supabaseKey) {
 }
 
 var supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+const COMPETITION_COMPLETE = false;
 
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
@@ -113,43 +116,6 @@ app.post("/username", function (req, res) {
     });
 });
 
-async function addInitialItems (data) {
-    await addInitialItems1(data);
-}
-
-async function addInitialItems1 (data) {
-    var randomObjects = getRandomIndices(
-        allObjectsAvailable["tier1"],
-        4
-      );
-
-      var items_to_add = [{
-        user_id: data.user.id,
-        item_name: "friend",
-        found: false,
-        order: i + 1,
-        batch_completed: false,
-      }];
-
-      // insert into Lists
-      for (var i = 0; i < randomObjects.length; i++) {
-        items_to_add.push({
-          user_id: data.user.id,
-          item_name: randomObjects[i],
-          found: false,
-          order: i + 1,
-          batch_completed: false,
-        });
-      }
-
-      supabase
-        .from("Lists")
-        .insert(items_to_add)
-        .then(({ data, error }) => {
-          return;
-        });
-}
-
 app.post("/register", async (req, res) => {
   var email = req.body.email_create;
   var password = req.body.create_pw;
@@ -202,12 +168,40 @@ app.post("/register", async (req, res) => {
               } else {
                 res.cookie("start_time", new Date().getTime());
                 // assign objects
-                addInitialItems(data);
+                var tier1 = structuredClone(allObjectsAvailable.tier1);
+                
+                  var randomObjects = getRandomIndices(
+                    tier1,
+                    5
+                  );
 
-                res.cookie("user_id", data.user.id);
-                res.cookie("user_email", data.user.email);
-                res.cookie("new_user", true);
-                res.redirect("/");
+                  var items_to_add = [];
+
+                  console.log(randomObjects.length)
+                  
+                  // insert into Lists
+                  for (var i = 0; i < randomObjects.length; i++) {
+                    items_to_add.push({
+                      user_id: data.user.id,
+                      item_name: randomObjects[i],
+                      found: false,
+                      order: i,
+                      batch_completed: false,
+                    });
+                  }
+
+                  // console.log(items_to_add)
+
+                  supabase
+                    .from("Lists")
+                    .insert(items_to_add)
+                    .then(({ new_data, error }) => {
+                      console.log(new_data)
+                      res.cookie("user_id", data.user.id);
+                      res.cookie("user_email", data.user.email);
+                      res.cookie("new_user", true);
+                      res.redirect("/");
+                    });
               }
             }
           });
@@ -243,6 +237,7 @@ app.post("/login", async function (req, res) {
 app.get("/logout", function (req, res) {
   res.clearCookie("user_id");
   res.clearCookie("user_email");
+  res.clearCookie("username");
   res.redirect("/");
 });
 
@@ -305,7 +300,6 @@ app.post("/found", async (req, res) => {
   var object_name = req.body.object;
   var user_id = req.cookies.user_id;
 
-  // update user object list
   await update_batch(req.cookies.user_id);
   supabase
     .from("Lists")
@@ -352,8 +346,8 @@ app.post("/found", async (req, res) => {
             .from("Lists")
             .select("*")
             .eq("user_id", user_id)
-            .then(({ data, error }) => {
-                insertObjects(data, req, found_classes, object_name);
+            .then(async function ({ data, error }) {
+                await insertObjects(data, req, found_classes, object_name);
                 res.body = { error: null };
                 res.send();
             }
@@ -368,7 +362,9 @@ async function insertObjects (data, req, found_classes, last_found, override = f
         return object.item_name;
     });
 
-    if ((found_classes.length < 2 && !found_class_labels.includes(last_found)) || found_classes.length == 0 || override) {
+    var found_classes_is_5_divisor = found_classes.length + 1 % 5 == 0;
+
+    if ((found_classes.length < 2 && !found_class_labels.includes(last_found)) || found_classes.length == 0 || override || found_classes_is_5_divisor) {
         var found_classes = data.filter(function (object) {
           return object.found == true;
         });
@@ -408,7 +404,7 @@ app.get("/", function (req, res) {
   if (req.cookies && req.cookies.user_email) {
     res.redirect("/play");
   } else {
-    res.render("entry", { user: null, error: null });
+    res.render("entry", { user: null, error: null, complete: COMPETITION_COMPLETE });
   }
 });
 
@@ -429,11 +425,10 @@ app.get("/play", function (req, res) {
 
         // if user has found all objects but less than 25, assign new ones
 
-        if (batch_completed_count && data.length < 25) {
-            console.log("found all, assigning new objects");
-            insertObjects(data, req, data, null, true);
-            res.clearCookie("new_user");
-        }
+        // if (data.length < 2 && data.length < 25) {
+        //     insertObjects(data, req, data, null, true);
+        //     res.clearCookie("new_user");
+        // }
         var found_any = data.some(function (item) {
           return item.found && !item.batch_completed;
         });
@@ -470,7 +465,8 @@ app.get("/play", function (req, res) {
           objects_identified: objects_identified,
           raffle_tickets_won: raffle_tickets_won,
           level: level,
-          new_user: new_user
+          new_user: new_user,
+          complete: COMPETITION_COMPLETE
         });
       });
   } else {
@@ -478,13 +474,50 @@ app.get("/play", function (req, res) {
   }
 });
 
-app.get("/rules", function (req, res) {
-  res.render("rules", { user: req.cookies.user_email, error: null });
+app.post("/image", async (req, res) => {
+  var image = req.body.image_data;
+  var x = req.body.x;
+  var y = req.body.y;
+  var w = req.body.w;
+  var h = req.body.h;
+  var image_class = req.body.image_class;
+  var file_name = image_class + "-" + x + "-" + y + "-" + w + "-" + h + ".jpeg";
+
+  var decoded = base64buffer.decode(image);
+
+  // post to Images
+  await supabase
+    .from("Images")
+    .insert([
+      {
+        user_id: req.cookies.user_id,
+        file_name: file_name,
+        class: image_class,
+        x: x,
+        y: y,
+        width: w,
+        height: h,
+      },
+    ]);
+
+  supabase.storage
+    .from("images")
+    .upload(req.cookies.user_id + "-" + file_name, decoded, {
+        contentType: "image/jpeg",
+    })
+    .then(({ data, error }) => {});
+
+  res.body = { error: null };
+  res.send();
 });
 
-app.get("/terms", function (req, res) {
-  res.render("terms", { user: req.cookies.user_email, error: null });
-});
+// app.get("/rules", function (req, res) {
+//   res.render("rules", { user: req.cookies.user_email, error: null });
+// });
+
+// app.get("/terms", function (req, res) {
+//   res.render("terms", { user: req.cookies.user_email, error: null });
+// });
 
 app.get("/offline", function (req, res) {
     res.render("offline", { user: req.cookies.user_email, error: null });

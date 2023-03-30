@@ -3,6 +3,7 @@
     <head>
         <%- include('meta.ejs') %>
         <script>
+            var bounding_boxes = [];
             <% if (user) { %>
                 var user_list = [
                     <% for (let i = 0; i < scavenger_list.length; i++) { %>
@@ -63,86 +64,130 @@
                 style="display: none; width: 100%; height: auto;"
             />
             <main>
-                <% if (error) { %>
-                    <div class="error">
-                        <p><%= error %>. Please try again.</p>
-                    </div>
-                <% } %>
-                <section id="toast">
-                </section>
-                <% if (new_user && scavenger_list.length == 0) { %>
-                    <h1 style="text-align: center;">Welcome to the Scavenger Hunt!</h1>
-                    <p><a href="/play" class="full_size_button_aqua">Start Playing 🎮</a></p>
-                <% } else if (scavenger_list.length == 0) { %>
+                <% if (complete) { %>
                     <section>
-                        <p id='celebrate'>🎉 Nice work! You found every object on the list.</p>
-                        <h2>Stats 📈</h2>
-                        <p>Objects found: <%= objects_identified %></p>
-                        <p>Contest entries earned: <%= raffle_tickets_won %></p>
+                        <h1>Thanks for playing!</h1>
+                        <!-- <p>
+                            The contest is now closed. We'll be in touch if you win.
+                        </p> -->
                     </section>
                 <% } else { %>
-                    <script>
-                        var end_time = new Date("March 20, 2023 23:59:59").getTime();
-                        var username = "<% if (username) { %><%= username %><% } %>";
-                        var timer = setInterval(function() {
-                            var now = new Date();
-                            var diff = end_time - now;
-                            var days = Math.floor(diff / 1000 / 60 / 60 / 24);
-                            var hours = Math.floor(diff / 1000 / 60 / 60) - days * 24;
-                            var minutes = Math.floor(diff / 1000 / 60) - days * 24 * 60 - hours * 60;
-                            document.getElementById("start_time").innerHTML = "Time left: " + days + "d " + hours + "h " + minutes + "m ";
-                        }, 1000);
-                    </script>
-                    <button id="webcam-predict">Play</button>
-                    <p id="disclaimer">It may take a few moments for the model to load after you click "Play".</p>
-                    <section id="completion_buttons">
-                        <p id='celebrate'>🎉 Nice work! You found everything on your list and earned yourself +1 spot in the $1,000 contest.</p>
-                        <div id="set_username">
-                            <p id="set_username_error" class="error"></p>
-                            <p>Add your username to the leaderboard!</p>
-                            <form method="POST" action="/username">
-                                <input type="text" id="uname" name="uname" placeholder="Username" />
-                                <input type="submit" value="Set Username" />
-                            </form>
+                    <% if (error) { %>
+                        <div class="error">
+                            <p><%= error %>. Please try again.</p>
                         </div>
-                        <button onclick="window.location.reload();" class="full_size_button">Play Again</button>
-                        <a href="/leaderboard" class="full_size_button_aqua">See Leaderboard</a>
+                    <% } %>
+                    <section id="toast">
                     </section>
-                    <h2>Your Scavenger List</h2>
-                    <ul id="scavenger_list">
-                        <% for (let i = 0; i < scavenger_list.length; i++) { %>
-                            <li id="scavenger_<%= scavenger_list[i]['item_name'] %>">
-                                <% if (scavenger_list[i]["found"]) { %>
-                                    <span class="found">✅</span>
-                                <% } else { %>
-                                    🔲
-                                <% } %>
-                                <%= scavenger_list[i]["item_name"] %>
-                            </li>
-                        <% } %>
-                    </ul>
-                    <button id="pause-camera">Pause Camera</button>
-                    <p>
-                        Use your browser webcam to scan a room for objects. When you find an object on your list, your scavenger list will update. Every five objects found earns you a new contest entry.
-                    </p>
-                    <h2>Stats 📈</h2>
-                    <p>Objects found: <span id="objects_identified_count"><%= objects_identified %></span></p>
-                    <p>Contest entries earned: <%= raffle_tickets_won %></p>
-                    <p>
-                        <% if (level == 1) { %>
-                            Playing Level 1: Easy Mode
-                        <% } else if (level == 2) { %>
-                            Playing Level 2: Medium Mode
-                        <% } else if (level == 3) { %>
-                            Playing Level 3: Hard Mode
-                        <% } %>
-                    </p>
-                    <p id="start_time"></p>
-                    <p>
-                        Logged in: <a href="#" class="leaderboard_link"><%= user %></a>
-                    </p>
-                    <p><a href="/leaderboard" class="full_size_button_aqua">View leaderboard 🏆</a></p>
-                    <script src="/script.js" async></script>
+                    <% if (new_user && scavenger_list.length == 0) { %>
+                        <h1 style="text-align: center;">Welcome to the Scavenger Hunt!</h1>
+                        <p><a href="/play" class="full_size_button_aqua">Start Playing 🎮</a></p>
+                    <% } else if (scavenger_list.length == 0) { %>
+                        <section>
+                            <p id='celebrate'>🎉 Nice work! You found every object on the list.</p>
+                            <h2>Stats 📈</h2>
+                            <p>Objects found: <%= objects_identified %></p>
+                            <!-- <p>Contest entries earned: <%= raffle_tickets_won %></p> -->
+                        </section>
+                    <% } else { %>
+                        <script>
+                            var end_time = new Date("March 20, 2023 23:59:59").getTime();
+                            var username = "<% if (username) { %><%= username %><% } %>";
+                            var timer = setInterval(function() {
+                                var now = new Date();
+                                var diff = end_time - now;
+                                var days = Math.floor(diff / 1000 / 60 / 60 / 24);
+                                var hours = Math.floor(diff / 1000 / 60 / 60) - days * 24;
+                                var minutes = Math.floor(diff / 1000 / 60) - days * 24 * 60 - hours * 60;
+                                document.getElementById("start_time").innerHTML = "Time left: " + days + "d " + hours + "h " + minutes + "m ";
+                            }, 1000);
+                        </script>
+                        <button id="webcam-predict">Play</button>
+                        <p id="disclaimer">It may take a few moments for the model to load after you click "Play".</p>
+                        <section id="completion_buttons">
+                            <p id='celebrate'>🎉 Nice work! You found everything on your list.</p>
+                            <div id="set_username">
+                                <p id="set_username_error" class="error"></p>
+                                <p>Add your username to the leaderboard!</p>
+                                <form method="POST" action="/username">
+                                    <input type="text" id="uname" name="uname" placeholder="Username" />
+                                    <input type="submit" value="Set Username" />
+                                </form>
+                            </div>
+                            <button onclick="window.location.reload();" class="full_size_button">Play Again</button>
+                            <a href="/leaderboard" class="full_size_button_aqua">See Leaderboard</a>
+                        </section>
+                        <h2>Your Scavenger List</h2>
+                        <ul id="scavenger_list">
+                            <% for (let i = 0; i < scavenger_list.length; i++) { %>
+                                <li id="scavenger_<%= scavenger_list[i]['item_name'] %>">
+                                    <% if (scavenger_list[i]["found"]) { %>
+                                        <span class="found">✅</span>
+                                    <% } else { %>
+                                        🔲
+                                    <% } %>
+                                    <%= scavenger_list[i]["item_name"] %>
+                                </li>
+                            <% } %>
+                        </ul>
+                        <button id="pause-camera">Pause Camera</button>
+                        <p>
+                            Use your browser webcam to scan a room for objects. When you find an object on your list, your scavenger list will update. Every five objects found earns you a new contest entry.
+                        </p>
+                        <h2>Stats 📈</h2>
+                        <p>Objects found: <span id="objects_identified_count"><%= objects_identified %></span></p>
+                        <!-- <p>Contest entries earned: <%= raffle_tickets_won %></p> -->
+                        <p>
+                            <% if (level == 1) { %>
+                                Playing Level 1: Easy Mode
+                            <% } else if (level == 2) { %>
+                                Playing Level 2: Medium Mode
+                            <% } else if (level == 3) { %>
+                                Playing Level 3: Hard Mode
+                            <% } %>
+                        </p>
+                        <p id="start_time"></p>
+                        <p>
+                            Logged in: <a href="#" class="leaderboard_link"><%= user %></a>
+                        </p>
+                        <div>
+                            <input type="checkbox" id="data_sharing" name="data_sharing" style="width: initial; display: inline;" onchange="changeDataSharing(this)"> <label for="data_sharing" style="font-weight: initial; display: inline;">Share non-human image data with the contest organizers for research purposes</label>
+                        </div>
+                        <script>
+                            if ((localStorage.getItem("allows_image_sharing") || "true") == "true") {
+                                document.getElementById("data_sharing").checked = true;
+                            }
+                            function changeDataSharing(element) {
+                                var data_sharing = element.checked;
+                                if (data_sharing) {
+                                    localStorage.setItem("allows_image_sharing", "true");
+
+                                } else {
+                                    localStorage.setItem("allows_image_sharing", "false");
+                                }
+                            }
+                        </script>
+                        <p><a href="/leaderboard" class="full_size_button_aqua">View leaderboard 🏆</a></p>
+                        <script src="/script.js" async></script>
+                    <% } %>
+                    <dialog id="research">
+                        <h2>Roboflow Research</h2>
+                        <p>
+                            Roboflow is collecting data to help improve Microsoft COCO, the model used behind this project.
+                        </p>
+                        <p>
+                            If you'd like to help, you can give consent to share your non-human image data with Roboflow. This data may be open sourced in an image dataset in the future.
+                        </p>
+                        <p>
+                            <input type="checkbox" id="data_sharing" name="data_sharing" style="width: initial; display: inline;" checked onchange="changeDataSharing(this)"> <label for="data_sharing" style="font-weight: initial; display: inline; font-size: 1em;">Share non-human image data with Roboflow for research purposes</label>
+                        </p>
+                        <p>
+                            You can opt out at any time.
+                        </p>
+                        <p>
+                            <button id="data_sharing_button" onclick="document.getElementById('research').close();">Close</button>
+                        </p>
+                    </dialog>
                 <% } %>
                 <%- include('footer.ejs') %>
             </main>

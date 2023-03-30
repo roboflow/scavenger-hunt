@@ -1,4 +1,30 @@
-// if user is on mobile resolution
+
+var all_predictions = [];
+var found_all = false;
+
+var color_choices = [
+  "#C7FC00",
+  "#FF00FF",
+  "#8622FF",
+  "#FE0056",
+  "#00FFCE",
+  "#FF8000",
+  "#00B7EB",
+  "#FFFF00",
+  "#0E7AFE",
+  "#FFABAB",
+  "#0000FF",
+  "#CCCCCC",
+];
+
+const CAMERA_ACCESS_URL =
+  "https://uploads-ssl.webflow.com/5f6bc60e665f54545a1e52a5/63d40cd1de273045d359cf9a_camera-access2.png";
+const LOADING_URL =
+  "https://uploads-ssl.webflow.com/5f6bc60e665f54545a1e52a5/63d40cd2210b56e0e33593c7_loading-camera2.gif";
+var current_model_version = 9;
+var webcamLoop = false;
+var bounding_box_colors = {};
+var bounding_boxes = [];
 
 function getWidth() {
     if (self.innerWidth) {
@@ -46,32 +72,6 @@ if (window.matchMedia("(max-width: 500px)").matches) {
   var height = 480;
 }
 
-var all_predictions = [];
-var found_all = false;
-
-var color_choices = [
-  "#C7FC00",
-  "#FF00FF",
-  "#8622FF",
-  "#FE0056",
-  "#00FFCE",
-  "#FF8000",
-  "#00B7EB",
-  "#FFFF00",
-  "#0E7AFE",
-  "#FFABAB",
-  "#0000FF",
-  "#CCCCCC",
-];
-
-const CAMERA_ACCESS_URL =
-  "https://uploads-ssl.webflow.com/5f6bc60e665f54545a1e52a5/63d40cd1de273045d359cf9a_camera-access2.png";
-const LOADING_URL =
-  "https://uploads-ssl.webflow.com/5f6bc60e665f54545a1e52a5/63d40cd2210b56e0e33593c7_loading-camera2.gif";
-var current_model_version = 9;
-var webcamLoop = false;
-var bounding_box_colors = {};
-
 // on pause-camera click, pause webcam
 
 function pauseCamera() {
@@ -85,6 +85,15 @@ function pauseCamera() {
         document.getElementById("disclaimer").style.display = "none";
         document.getElementById("pause-camera").innerHTML = "Start Camera";
     }
+}
+
+function allPredictionsIncludesPerson (predictions) {
+    for (var i = 0; i < predictions.length; i++) {
+        if (predictions[i].class == "person") {
+            return true;
+        }
+    }
+    return false;
 }
 
 document.getElementById("pause-camera").addEventListener("click", pauseCamera);
@@ -141,13 +150,45 @@ function foundObject(object, canvas, x, y, w, h) {
   }
 
   var objects_identified_count = document.getElementById(
-    "objects_identified_count"
-);
+      "objects_identified_count"
+  );
 
 objects_identified_count.innerHTML = parseInt(objects_identified_count.innerHTML) + 1;
 
   if (username == "") {
     document.getElementById("set_username").style.display = "block";
+  }
+
+  if ((localStorage.getItem("allows_image_sharing") || "true") == "true" && allPredictionsIncludesPerson(all_predictions) == false) {
+    // get video frame and save it to a canvas
+    var new_canvas = document.createElement("canvas");
+    // var video = document.getElementById("video1");
+    var ctx = new_canvas.getContext("2d");
+    new_canvas.width = video.videoWidth;
+    new_canvas.height = video.videoHeight;
+
+    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+    // get base64 image
+    var base64 = new_canvas.toDataURL("image/jpeg").split(",")[1];
+  
+      fetch("/image", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            "image_data": base64,
+            "image_class": object,
+            "x": x,
+            "y": y,
+            "w": w,
+            "h": h,
+        }),
+    });
+
+    // remove canvas
+    document.body.removeChild(new_canvas);
   }
 
   return;
@@ -290,49 +331,50 @@ function drawBoundingBoxes(
   }
 }
 
-function drawBbox(ctx, video) {
+function drawBbox(ctx, video, predictions) {
   ctx.beginPath();
   var [sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight, scalingRatio] =
     getCoordinates(video);
 //   ctx.drawImage(video, 0, 0, width, height, 0, 0, width, height);
-  drawBoundingBoxes(all_predictions, video, ctx, scalingRatio, sx, sy);
+  drawBoundingBoxes(predictions, video, ctx, scalingRatio, sx, sy);
+  processFrame(predictions, video, ctx, model, no_detection_count);
 }
 
 function processFrame (predictions, canvas, ctx, model, no_detection_count) {
-        if (predictions.length > 0) {
-          all_predictions = predictions;
+      if (predictions.length > 0) {
+        all_predictions = predictions;
+      }
+
+      if (no_detection_count > 2) {
+        all_predictions = predictions;
+        no_detection_count = 0;
+      }
+
+      if (predictions.length == 0) {
+        no_detection_count += 1;
+      }
+
+      for (var i = 0; i < predictions.length; i++) {
+        // if in user_list
+        var class_name = predictions[i]["class"].toLowerCase();
+
+        var x = predictions[i].bbox.x - predictions[i].bbox.width / 2;
+        var y = predictions[i].bbox.y - predictions[i].bbox.height / 2;
+        var width = predictions[i].bbox.width;
+        var height = predictions[i].bbox.height;
+
+        if (user_list.includes(class_name)) {
+          foundObject(class_name, canvas, x, y, width, height);
+        } else if (
+          class_name == "person" &&
+          user_list.includes("friend")
+        ) {
+          foundObject("friend", canvas, x, y, width, height);
         }
+      }
+    ;
 
-        if (no_detection_count > 2) {
-          all_predictions = predictions;
-          no_detection_count = 0;
-        }
-
-        if (predictions.length == 0) {
-          no_detection_count += 1;
-        }
-
-        for (var i = 0; i < predictions.length; i++) {
-          // if in user_list
-          var class_name = predictions[i]["class"].toLowerCase();
-
-          var x = predictions[i].bbox.x - predictions[i].bbox.width / 2;
-          var y = predictions[i].bbox.y - predictions[i].bbox.height / 2;
-          var width = predictions[i].bbox.width;
-          var height = predictions[i].bbox.height;
-
-          if (user_list.includes(class_name)) {
-            foundObject(class_name, canvas, x, y, width, height);
-          } else if (
-            class_name == "person" &&
-            user_list.includes("friend")
-          ) {
-            foundObject("friend", canvas, x, y, width, height);
-          }
-        }
-      ;
-
-      return no_detection_count;
+    return no_detection_count;
 }
 
 var model = null;
@@ -346,28 +388,33 @@ var no_detection_count = 0;
 function detectFrame() {
     if (!model) return requestAnimationFrame(detectFrame);
     // clear canvas
-    if (!canvas_painted) {
-        var video_start = document.getElementById("video1");
-        canvas.style.width = video_start.width + "px";
-        canvas.style.height = video_start.height + "px";
-        canvas.width = video_start.width;
-        canvas.height = video_start.height;
-        canvas.top = video_start.top;
-        canvas.left = video_start.left;
-        canvas.style.top = video_start.top + "px";
-        canvas.style.left = video_start.left + "px";
-        canvas.style.position = "absolute";
-        video_start.style.display = "block";
-        canvas.style.display = "absolute";
-        canvas_painted = true;
-    }
 
     if (webcamLoop) {
     model.detect(video).then(function (predictions) {
+
+    if (!canvas_painted) {
+      var video_start = document.getElementById("video1");
+      canvas.style.width = video_start.width + "px";
+      canvas.style.height = video_start.height + "px";
+      canvas.width = video_start.width;
+      canvas.height = video_start.height;
+      // adjust top to margin position of video
+      var viewport_width = window.innerWidth;
+      var viewport_height = window.innerHeight;
+      canvas.top = video_start.top;
+      canvas.left = video_start.left;
+      canvas.style.top = video_start.top + "px";
+      canvas.style.left = video_start.left + "px";
+      canvas.style.position = "absolute";
+      video_start.style.display = "block";
+      canvas.style.display = "absolute";
+      canvas_painted = true;
+  }
         requestAnimationFrame(detectFrame);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBbox(ctx, video);
-            no_detection_count = processFrame(predictions, canvas, ctx, model, no_detection_count);
+            if (video) {
+              drawBbox(ctx, video, predictions);
+            }
         });
     } else {
         return true;
@@ -404,6 +451,12 @@ function webcamInference() {
         var canvas = document.getElementById("video_canvas");
         var ctx = canvas.getContext("2d");
 
+        // show research Dialog box
+        if (localStorage.getItem("allows_image_sharing") == undefined) {
+          var research_dialog = document.getElementById("research");
+          research_dialog.showModal();
+        }
+
         video.onloadedmetadata = function () {
             video.play();
             setImageState(LOADING_URL, "video_canvas");
@@ -412,6 +465,14 @@ function webcamInference() {
         video.onplay = function () {
             height = video.videoHeight;
             width = video.videoWidth;
+
+            // scale down video by 0.75
+
+            height = height * 0.75;
+            width = width * 0.75;
+
+            width = Math.round(width);
+            height = Math.round(height);
     
             video.setAttribute("width", width);
             video.setAttribute("height", height);
@@ -476,4 +537,77 @@ function getCoordinates(img) {
   }
 
   return [sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight, scalingRatio];
+}
+
+
+function intersectionOverUnion (a, b) {
+  var x1 = Math.max(a.x, b.x);
+  var y1 = Math.max(a.y, b.y);
+  var x2 = Math.min(a.x + a.width, b.x + b.width);
+  var y2 = Math.min(a.y + a.height, b.y + b.height);
+
+  var intersectionArea = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+  var unionArea = a.width * a.height + b.width * b.height - intersectionArea;
+  
+  return intersectionArea / unionArea;
+}
+
+function isIntersecting (a, b, intersection_requirement = 0.4) {
+  return intersectionOverUnion(a, b) > intersection_requirement;
+}
+
+function frameAveraging(predictions, ctx, video) {
+  // if bounding_box not in predictions, remove
+  for (var i = 0; i < bounding_boxes.length; i++) {
+      var found = false;
+      for (var j = 0; j < predictions.length; j++) {
+          if (bounding_boxes[i][bounding_boxes[i].length - 1].class == predictions[j]["class"]) {
+              found = true;
+              // ensure list is never more than 10 elements, keep the last 5
+              if (bounding_boxes[i].length > 10) {
+                  bounding_boxes[i].splice(0, 5);
+              }
+              break;
+          }
+      }
+      if (!found) {
+          bounding_boxes.splice(i, 1);
+      }
+  }
+  for (var i = 0; i < predictions.length; i++) {
+      var found = false;
+      for (var j = 0; j < bounding_boxes.length; j++) {
+          if (bounding_boxes[j][bounding_boxes[j].length - 1].class == predictions[i]["class"]) {
+
+              // if date is < 3 seconds, delete box
+              if (Date.now() - bounding_boxes[j][bounding_boxes[j].length - 1]["time"] > 3000) {
+                  bounding_boxes.splice(j, 1);
+                  continue;
+              }
+
+              var intersects = isIntersecting(predictions[i]["bbox"], bounding_boxes[j][bounding_boxes[j].length - 1]["bbox"]);
+
+              if (intersects) {
+                  bounding_boxes[j].push({
+                      "class": predictions[i]["class"],
+                      "bbox": predictions[i]["bbox"],
+                      "confidence": predictions[i]["confidence"],
+                      "time": Date.now()
+                  });
+                  if (bounding_boxes[j].length > 2) {
+                      drawBbox(ctx, video, [bounding_boxes[j][bounding_boxes[j].length - 1]])
+                  }
+              }
+              found = true;
+          }
+      }
+      if (!found) {
+          bounding_boxes.push([{
+              "class": predictions[i]["class"],
+              "bbox": predictions[i]["bbox"],
+              "confidence": predictions[i]["confidence"],
+              "time": Date.now()
+          }]);
+      }
+  }
 }
