@@ -91,16 +91,16 @@
                         </section>
                     <% } else { %>
                         <script>
-                            var end_time = new Date("March 20, 2023 23:59:59").getTime();
+                            // var end_time = new Date("March 20, 2023 23:59:59").getTime();
                             var username = "<% if (username) { %><%= username %><% } %>";
-                            var timer = setInterval(function() {
-                                var now = new Date();
-                                var diff = end_time - now;
-                                var days = Math.floor(diff / 1000 / 60 / 60 / 24);
-                                var hours = Math.floor(diff / 1000 / 60 / 60) - days * 24;
-                                var minutes = Math.floor(diff / 1000 / 60) - days * 24 * 60 - hours * 60;
-                                document.getElementById("start_time").innerHTML = "Time left: " + days + "d " + hours + "h " + minutes + "m ";
-                            }, 1000);
+                            // var timer = setInterval(function() {
+                            //     var now = new Date();
+                            //     var diff = end_time - now;
+                            //     var days = Math.floor(diff / 1000 / 60 / 60 / 24);
+                            //     var hours = Math.floor(diff / 1000 / 60 / 60) - days * 24;
+                            //     var minutes = Math.floor(diff / 1000 / 60) - days * 24 * 60 - hours * 60;
+                            //     document.getElementById("start_time").innerHTML = "Time left: " + days + "d " + hours + "h " + minutes + "m ";
+                            // }, 1000);
                         </script>
                         <button id="webcam-predict">Play</button>
                         <p id="disclaimer">It may take a few moments for the model to load after you click "Play".</p>
@@ -146,7 +146,7 @@
                                 Playing Level 3: Hard Mode
                             <% } %>
                         </p>
-                        <p id="start_time"></p>
+                        <!-- <p id="start_time"></p> -->
                         <p>
                             Logged in: <a href="#" class="leaderboard_link"><%= user %></a>
                         </p>

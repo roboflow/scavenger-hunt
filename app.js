@@ -301,6 +301,7 @@ app.post("/found", async (req, res) => {
   var user_id = req.cookies.user_id;
 
   await update_batch(req.cookies.user_id);
+
   supabase
     .from("Lists")
     .update({ found: true, batch_completed: true })
@@ -347,9 +348,11 @@ app.post("/found", async (req, res) => {
             .select("*")
             .eq("user_id", user_id)
             .then(async function ({ data, error }) {
-                await insertObjects(data, req, found_classes, object_name);
-                res.body = { error: null };
-                res.send();
+                await insertObjects(data, req, found_classes, object_name).then(function (found_classes) {
+
+                  res.body = { error: null };
+                  res.send();
+                });
             }
             );
     });
